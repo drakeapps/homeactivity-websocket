@@ -1,4 +1,4 @@
-aiopg==1.1.0
+asyncpg==0.21.0
 Django==1.11.22
 psycopg2==2.8.6
 pytz==2020.5
