@@ -52,9 +52,7 @@ class Server:
             for row in new_rows:
                 print(f"new row: {row}")
                 await self.send_update(row['activity_id'])
-                print(f"last_row: {self.last_row} new row: {row['id']}")
-                if row['id'] < self.last_row:
-                    print("updating last_row")
+                if row['id'] > self.last_row:
                     self.last_row = row['id']
             await asyncio.sleep(0.5)
     
