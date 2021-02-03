@@ -62,6 +62,7 @@ class Server:
     async def send_update(self, pk):
         if self.CONNS:
             activity = Activity.objects.get(pk=pk)
+            items = []
             item = {}
             item['pk'] = activity.pk
             item['activity_text'] = activity.activity_text
@@ -72,8 +73,9 @@ class Server:
                 item['next_checkin'] = last_checkin[0].date.timestamp() + (activity.hours * 60*60)
             else:
                 item['next_checkin'] = 0
+            items.append(item)
             for conn in self.CONNS:
-                await conn.send(json.dumps(item))
+                await conn.send(json.dumps(items))
         
 
     async def initial_state(self, websocket):
