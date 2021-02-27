@@ -27,17 +27,17 @@ class Server:
 
         tasks = set()
 
-        self.start_db = self.get_new_rows(db_user, db_password, db_name, db_host)
+        start_db = self.get_new_rows(db_user, db_password, db_name, db_host)
+        tasks.add(start_db)
 
-        tasks.add(self.start_db)
+        periodic = self.routine_send()
+        tasks.add(periodic)
 
-        self.periodic = self.routine_send()
-
-        tasks.add(self.periodic)
+        self.run_tasks = asyncio.gather(tasks)
 
         asyncio.get_event_loop().run_until_complete(self.start_server)
 
-        await asyncio.gather(*tasks)
+        asyncio.get_event_loop().run_until_complete(self.run_tasks)
 
         asyncio.get_event_loop().run_forever()
 
