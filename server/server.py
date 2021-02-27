@@ -33,7 +33,7 @@ class Server:
         periodic = self.routine_send()
         tasks.add(periodic)
 
-        self.run_tasks = asyncio.gather(tasks)
+        self.run_tasks = asyncio.gather(*tasks)
 
         asyncio.get_event_loop().run_until_complete(self.start_server)
 
