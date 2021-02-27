@@ -25,15 +25,19 @@ class Server:
 
         self.start_server = websockets.serve(self.change_status, host, port)
 
+        tasks = set()
+
         self.start_db = self.get_new_rows(db_user, db_password, db_name, db_host)
+
+        tasks.add(self.start_db)
 
         self.periodic = self.routine_send()
 
+        tasks.add(self.periodic)
+
         asyncio.get_event_loop().run_until_complete(self.start_server)
 
-        asyncio.get_event_loop().run_until_complete(self.start_db)
-
-        asyncio.get_event_loop().run_until_complete(self.periodic)
+        await asyncio.gather(*tasks)
 
         asyncio.get_event_loop().run_forever()
 
@@ -106,9 +110,10 @@ class Server:
     
     async def routine_send(self):
         while 1:
-            state = await self.get_state()
-            for conn in self.CONNS:
-                await conn.send(state)
+            if self.CONNS:
+                state = await self.get_state()
+                for conn in self.CONNS:
+                    await conn.send(state)
             await asyncio.sleep(60)
 
     
