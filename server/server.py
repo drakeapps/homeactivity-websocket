@@ -27,9 +27,13 @@ class Server:
 
         self.start_db = self.get_new_rows(db_user, db_password, db_name, db_host)
 
+        self.periodic = self.routine_send()
+
         asyncio.get_event_loop().run_until_complete(self.start_server)
 
         asyncio.get_event_loop().run_until_complete(self.start_db)
+
+        asyncio.get_event_loop().run_until_complete(self.periodic)
 
         asyncio.get_event_loop().run_forever()
 
@@ -76,9 +80,8 @@ class Server:
             items.append(item)
             for conn in self.CONNS:
                 await conn.send(json.dumps(items))
-        
 
-    async def initial_state(self, websocket):
+    async def get_state(self):
         activities = Activity.objects.filter(enabled=True).order_by('pk')
         parsed = []
         for activity in activities:
@@ -95,7 +98,18 @@ class Server:
                 item['next_checkin'] = 0
 
             parsed.append(item)
-        await websocket.send(json.dumps(parsed))
+        return json.dumps(parsed)
+
+    async def initial_state(self, websocket):
+        state = await self.get_state()
+        await websocket.send(state)
+    
+    async def routine_send(self):
+        while 1:
+            state = await self.get_state()
+            for conn in self.CONNS:
+                await conn.send(state)
+            await asyncio.sleep(60)
 
     
     async def register(self, websocket):
